@@ -23,11 +23,11 @@ const (
 )
 
 type Denominator struct {
-	Schema          string        `json:"schema"`
-	DenominatorID   string        `json:"denominator_id"`
-	Total           int           `json:"total"`
-	ProofTotals     []Bucket      `json:"proof_totals"`
-	IndicatorTotals []Bucket      `json:"indicator_totals"`
+	Schema          string            `json:"schema"`
+	DenominatorID   string            `json:"denominator_id"`
+	Total           int               `json:"total"`
+	ProofTotals     []Bucket          `json:"proof_totals"`
+	IndicatorTotals []Bucket          `json:"indicator_totals"`
 	Cells           []DenominatorCell `json:"cells"`
 }
 
@@ -51,19 +51,19 @@ type DenominatorCell struct {
 }
 
 type Input struct {
-	Schema         string           `json:"schema"`
-	Subject        Subject          `json:"subject"`
-	ContractDigest string           `json:"contract_digest"`
-	SourceBinding  SourceBinding    `json:"source_binding"`
-	SemanticGraph  SemanticGraph    `json:"semantic_graph"`
-	Bindings       []ActivityBinding `json:"bindings"`
-	Claims         []ClaimEvidence  `json:"claims"`
-	Changes        []Change         `json:"changes"`
-	Tests          []TestDefinition `json:"tests"`
-	ProposedActions []TestAction    `json:"proposed_actions,omitempty"`
-	FullCommand    []string         `json:"full_command"`
-	Authority      Authority         `json:"authority"`
-	ControlDecision string          `json:"control_decision"`
+	Schema          string            `json:"schema"`
+	Subject         Subject           `json:"subject"`
+	ContractDigest  string            `json:"contract_digest"`
+	SourceBinding   SourceBinding     `json:"source_binding"`
+	SemanticGraph   SemanticGraph     `json:"semantic_graph"`
+	Bindings        []ActivityBinding `json:"bindings"`
+	Claims          []ClaimEvidence   `json:"claims"`
+	Changes         []Change          `json:"changes"`
+	Tests           []TestDefinition  `json:"tests"`
+	ProposedActions []TestAction      `json:"proposed_actions,omitempty"`
+	FullCommand     []string          `json:"full_command"`
+	Authority       Authority         `json:"authority"`
+	ControlDecision string            `json:"control_decision"`
 }
 
 type Subject struct {
@@ -72,18 +72,18 @@ type Subject struct {
 }
 
 type SourceBinding struct {
-	Path          string `json:"path"`
-	SourceDigest  string `json:"source_digest"`
+	Path           string `json:"path"`
+	SourceDigest   string `json:"source_digest"`
 	SemanticDigest string `json:"semantic_digest"`
-	GraphDigest   string `json:"graph_digest"`
+	GraphDigest    string `json:"graph_digest"`
 }
 
 type SemanticGraph struct {
-	SchemaVersion string          `json:"schema_version"`
-	SourceDigest  string          `json:"source_digest"`
-	SemanticDigest string         `json:"semantic_digest"`
-	GraphDigest   string          `json:"graph_digest"`
-	Activities    []GraphActivity `json:"activities"`
+	SchemaVersion  string          `json:"schema_version"`
+	SourceDigest   string          `json:"source_digest"`
+	SemanticDigest string          `json:"semantic_digest"`
+	GraphDigest    string          `json:"graph_digest"`
+	Activities     []GraphActivity `json:"activities"`
 }
 
 type GraphActivity struct {
@@ -92,22 +92,22 @@ type GraphActivity struct {
 }
 
 type ActivityBinding struct {
-	Activity      string `json:"activity"`
-	GraphNodeID   string `json:"graph_node_id"`
-	SourceDigest  string `json:"source_digest"`
+	Activity       string `json:"activity"`
+	GraphNodeID    string `json:"graph_node_id"`
+	SourceDigest   string `json:"source_digest"`
 	SemanticDigest string `json:"semantic_digest"`
-	BindingDigest string `json:"binding_digest"`
+	BindingDigest  string `json:"binding_digest"`
 }
 
 type ClaimEvidence struct {
-	ID            string             `json:"id"`
-	Subject       string             `json:"subject"`
-	ActivityPath  []string           `json:"activity_path"`
-	SourceDigest  string             `json:"source_digest"`
-	SemanticDigest string            `json:"semantic_digest"`
-	GraphDigest   string             `json:"graph_digest"`
-	EvidenceDigest string            `json:"evidence_digest"`
-	Exclusions    []ExclusionEvidence `json:"exclusions"`
+	ID             string              `json:"id"`
+	Subject        string              `json:"subject"`
+	ActivityPath   []string            `json:"activity_path"`
+	SourceDigest   string              `json:"source_digest"`
+	SemanticDigest string              `json:"semantic_digest"`
+	GraphDigest    string              `json:"graph_digest"`
+	EvidenceDigest string              `json:"evidence_digest"`
+	Exclusions     []ExclusionEvidence `json:"exclusions"`
 }
 
 type ExclusionEvidence struct {
@@ -122,21 +122,21 @@ type Change struct {
 }
 
 type TestDefinition struct {
-	ID              string   `json:"id"`
-	Command         []string `json:"command"`
-	Activities      []string `json:"activities"`
-	ReuseCandidate  bool     `json:"reuse_candidate"`
-	PriorReceipt    *PriorReceipt `json:"prior_receipt,omitempty"`
+	ID             string        `json:"id"`
+	Command        []string      `json:"command"`
+	Activities     []string      `json:"activities"`
+	ReuseCandidate bool          `json:"reuse_candidate"`
+	PriorReceipt   *PriorReceipt `json:"prior_receipt,omitempty"`
 }
 
 type PriorReceipt struct {
-	Status         string `json:"status"`
-	SourceDigest   string `json:"source_digest"`
-	SemanticDigest string `json:"semantic_digest"`
-	GraphDigest    string `json:"graph_digest"`
-	ContractDigest string `json:"contract_digest"`
+	Status          string `json:"status"`
+	SourceDigest    string `json:"source_digest"`
+	SemanticDigest  string `json:"semantic_digest"`
+	GraphDigest     string `json:"graph_digest"`
+	ContractDigest  string `json:"contract_digest"`
 	ToolchainDigest string `json:"toolchain_digest"`
-	ResultDigest   string `json:"result_digest"`
+	ResultDigest    string `json:"result_digest"`
 }
 
 type Authority struct {
@@ -183,12 +183,12 @@ type ActivityReceipt struct {
 }
 
 type TestAction struct {
-	ID               string             `json:"id"`
-	Command          []string           `json:"command"`
-	Action           string             `json:"action"`
-	CausalClaimIDs   []string           `json:"causal_claim_ids"`
+	ID                string              `json:"id"`
+	Command           []string            `json:"command"`
+	Action            string              `json:"action"`
+	CausalClaimIDs    []string            `json:"causal_claim_ids"`
 	ExclusionEvidence []ExclusionEvidence `json:"exclusion_evidence"`
-	Reason           string             `json:"reason"`
+	Reason            string              `json:"reason"`
 }
 
 type CausalState struct {
@@ -212,29 +212,29 @@ type PlanMetrics struct {
 }
 
 type Runtime struct {
-	Schema       string            `json:"schema"`
-	SubjectSHA   string            `json:"subject_sha"`
-	Toolchain    Toolchain         `json:"toolchain"`
+	Schema       string             `json:"schema"`
+	SubjectSHA   string             `json:"subject_sha"`
+	Toolchain    Toolchain          `json:"toolchain"`
 	Inventory    WorkspaceInventory `json:"inventory"`
-	Build        Measurement       `json:"build"`
-	TestFull     TestRun           `json:"test_full"`
+	Build        Measurement        `json:"build"`
+	TestFull     TestRun            `json:"test_full"`
 	TestSelected TestRun            `json:"test_selected"`
 	Conformance  Measurement       `json:"conformance"`
-	Pair         ExactPair         `json:"exact_pair"`
-	Authority    Authority         `json:"authority"`
-	Cases        []CaseResult      `json:"cases"`
+	Pair         ExactPair          `json:"exact_pair"`
+	Authority    Authority          `json:"authority"`
+	Cases        []CaseResult       `json:"cases"`
 }
 
 type Toolchain struct {
-	GoVersion     string `json:"go_version"`
-	GoooVersion   string `json:"gooo_version"`
-	GoooDigest    string `json:"gooo_digest"`
+	GoVersion   string `json:"go_version"`
+	GoooVersion string `json:"gooo_version"`
+	GoooDigest  string `json:"gooo_digest"`
 }
 
 type Measurement struct {
-	Status      string `json:"status"`
-	WallMS      int    `json:"wall_ms"`
-	PeakRSSKib  int    `json:"peak_rss_kib"`
+	Status     string `json:"status"`
+	WallMS     int    `json:"wall_ms"`
+	PeakRSSKib int    `json:"peak_rss_kib"`
 }
 
 type TestRun struct {

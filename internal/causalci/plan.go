@@ -36,19 +36,19 @@ type graphObservation struct {
 }
 
 type rawClaims struct {
-	Schema string      `json:"schema"`
+	Schema string     `json:"schema"`
 	Claims []rawClaim `json:"claims"`
 }
 
 type rawClaim struct {
-	ID            string             `json:"id"`
-	Subject       string             `json:"subject"`
-	ActivityPath  []string           `json:"activity_path"`
-	Exclusions    []ExclusionEvidence `json:"exclusions"`
+	ID           string              `json:"id"`
+	Subject      string              `json:"subject"`
+	ActivityPath []string            `json:"activity_path"`
+	Exclusions   []ExclusionEvidence `json:"exclusions"`
 }
 
 type rawChanges struct {
-	Schema  string   `json:"schema"`
+	Schema   string   `json:"schema"`
 	ClaimIDs []string `json:"claim_ids"`
 }
 

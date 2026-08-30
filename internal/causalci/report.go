@@ -48,7 +48,7 @@ func Evaluate(plan Plan, runtime Runtime, denominator Denominator, outputDir str
 			Reused:      selectedCounts.Reused,
 			Skipped:     selectedCounts.Skipped,
 		},
-		Tests: ReportTests{Total: len(plan.Tests), Full: fullCounts, Selected: selectedCounts},
+		Tests:     ReportTests{Total: len(plan.Tests), Full: fullCounts, Selected: selectedCounts},
 		Inventory: runtime.Inventory,
 		Performance: ReportPerformance{
 			BuildWallMS:            runtime.Build.WallMS,
@@ -63,8 +63,8 @@ func Evaluate(plan Plan, runtime Runtime, denominator Denominator, outputDir str
 			ExactPair:              paired,
 		},
 		Authority: ReportAuthority{RepositoryWrites: runtime.Authority.RepositoryWrites, RootReadmePolicy: "EXCLUDED", ObservationMode: "READ_ONLY"},
-		Cases:    append([]CaseResult(nil), runtime.Cases...),
-		Evidence: evidenceFromPlan(plan),
+		Cases:     append([]CaseResult(nil), runtime.Cases...),
+		Evidence:  evidenceFromPlan(plan),
 	}
 
 	if err := writeJSONFile(filepath.Join(outputDir, "activity-plan.json"), plan); err != nil {
@@ -74,8 +74,8 @@ func Evaluate(plan Plan, runtime Runtime, denominator Denominator, outputDir str
 		return Report{}, err
 	}
 	if err := writeJSONFile(filepath.Join(outputDir, "metrics.json"), struct {
-		Metrics     ReportMetrics     `json:"metrics"`
-		Performance ReportPerformance `json:"performance"`
+		Metrics     ReportMetrics      `json:"metrics"`
+		Performance ReportPerformance  `json:"performance"`
 		Inventory   WorkspaceInventory `json:"inventory"`
 	}{report.Metrics, report.Performance, report.Inventory}); err != nil {
 		return Report{}, err
@@ -296,11 +296,11 @@ func writeManifest(root string, report Report) error {
 	}
 	sort.Slice(files, func(i, j int) bool { return files[i].Path < files[j].Path })
 	return writeJSONFile(filepath.Join(root, "manifest.json"), struct {
-		Schema           string            `json:"schema"`
-		ReportDigest     string            `json:"report_digest"`
-		ArtifactFiles    int               `json:"artifact_files"`
-		ArtifactBytes    int64             `json:"artifact_bytes"`
-		Files            []manifestEntry   `json:"files"`
+		Schema        string          `json:"schema"`
+		ReportDigest  string          `json:"report_digest"`
+		ArtifactFiles int             `json:"artifact_files"`
+		ArtifactBytes int64           `json:"artifact_bytes"`
+		Files         []manifestEntry `json:"files"`
 	}{"gooo/causal-ci/artifact-manifest/v1", report.Digest, report.Artifacts.Files, report.Artifacts.Bytes, files})
 }
 
