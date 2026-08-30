@@ -35,7 +35,7 @@ jobs:
           set -euo pipefail
           work="$RUNNER_TEMP/causal-ci"
           mkdir -p "$work"
-          test -z "$(gofmt -l .)"
+          test -z "$(gofmt -l .)" || { gofmt -d .; exit 1; }
           go vet ./...
           go test ./...
           start_ns=$(date +%s%N)
