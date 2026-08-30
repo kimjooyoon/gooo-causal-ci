@@ -1,0 +1,29 @@
+{
+  "schema": "gooo/causal-ci/denominator/v1",
+  "denominator_id": "gooo.denominator.causal-ci.v1",
+  "total": 12,
+  "proof_totals": [
+    {"name": "FOUNDATION", "total": 4},
+    {"name": "COHERENCE", "total": 4},
+    {"name": "REGRESSION", "total": 4}
+  ],
+  "indicator_totals": [
+    {"name": "DRIVER", "total": 4},
+    {"name": "OUTCOME", "total": 4},
+    {"name": "GUARDRAIL", "total": 4}
+  ],
+  "cells": [
+    {"id":"SOURCE_BINDING","activity":"VerifySourceBinding","stage":"SOURCE_BINDING","step":"bind-source","proof_choice":"FOUNDATION","indicator_class":"DRIVER","metric_path":"source_binding.source_digest","closed_reason":"SOURCE_BINDING_VERIFIED","unknown_reason":"SOURCE_BINDING_NOT_OBSERVED","refuted_reason":"SOURCE_BINDING_CONTRADICTED","next_operation":"VERIFY_SOURCE_BINDING"},
+    {"id":"SEMANTIC_GRAPH","activity":"VerifySemanticGraph","stage":"SEMANTIC_GRAPH","step":"bind-graph","proof_choice":"FOUNDATION","indicator_class":"DRIVER","metric_path":"semantic_graph.graph_digest","closed_reason":"SEMANTIC_GRAPH_VERIFIED","unknown_reason":"SEMANTIC_GRAPH_STALE","refuted_reason":"SEMANTIC_GRAPH_CONTRADICTED","next_operation":"REGENERATE_SEMANTIC_GRAPH"},
+    {"id":"CLAIM_BINDING","activity":"BindClaimEvidence","stage":"CLAIM_EVIDENCE","step":"bind-claims","proof_choice":"FOUNDATION","indicator_class":"OUTCOME","metric_path":"claims.evidence_digest","closed_reason":"CLAIM_EVIDENCE_BOUND","unknown_reason":"CLAIM_EVIDENCE_MISSING","refuted_reason":"CLAIM_EVIDENCE_DIGEST_MISMATCH","next_operation":"PROVIDE_CLAIM_EVIDENCE"},
+    {"id":"CHANGED_CLAIM","activity":"ObserveChangedClaim","stage":"CLAIM_EVIDENCE","step":"observe-change","proof_choice":"FOUNDATION","indicator_class":"GUARDRAIL","metric_path":"changes.claim_ids","closed_reason":"CHANGED_CLAIM_OBSERVED","unknown_reason":"CHANGED_CLAIM_UNAVAILABLE","refuted_reason":"CHANGED_CLAIM_CONTRADICTED","next_operation":"PROVIDE_CHANGED_CLAIM_EVIDENCE"},
+    {"id":"CAUSAL_CLOSURE","activity":"TraceCausalClosure","stage":"CAUSAL_SELECTION","step":"trace-closure","proof_choice":"COHERENCE","indicator_class":"DRIVER","metric_path":"claims.activity_path","closed_reason":"CAUSAL_CLOSURE_TRACED","unknown_reason":"CAUSAL_CLOSURE_UNKNOWN","refuted_reason":"CAUSAL_CLOSURE_CONTRADICTED","next_operation":"RECONSTRUCT_CAUSAL_CLOSURE"},
+    {"id":"SELECTED_ACTIVITIES","activity":"GenerateSelectedActivities","stage":"CAUSAL_SELECTION","step":"generate-selected","proof_choice":"COHERENCE","indicator_class":"OUTCOME","metric_path":"tests.selected","closed_reason":"SELECTED_TEST_ACTIVITIES_GENERATED","unknown_reason":"SELECTED_ACTIVITIES_UNKNOWN","refuted_reason":"SELECTED_ACTIVITIES_CONTRADICTED","next_operation":"REGENERATE_SELECTED_ACTIVITIES"},
+    {"id":"EXCLUDED_EVIDENCE","activity":"PreserveExcludedEvidence","stage":"CAUSAL_SELECTION","step":"preserve-exclusions","proof_choice":"COHERENCE","indicator_class":"GUARDRAIL","metric_path":"tests.exclusion_evidence","closed_reason":"EXCLUSION_EVIDENCE_PRESERVED","unknown_reason":"EXCLUSION_EVIDENCE_MISSING","refuted_reason":"INCORRECT_EXCLUSION_EVIDENCE","next_operation":"REJECT_INCORRECT_EXCLUSION"},
+    {"id":"EXECUTION_ENVELOPE","activity":"GenerateExecutionEnvelope","stage":"EXECUTION","step":"generate-envelope","proof_choice":"COHERENCE","indicator_class":"OUTCOME","metric_path":"tests.commands","closed_reason":"EXECUTION_ENVELOPE_GENERATED","unknown_reason":"EXECUTION_ENVELOPE_UNKNOWN","refuted_reason":"EXECUTION_ENVELOPE_CONTRADICTED","next_operation":"REGENERATE_EXECUTION_ENVELOPE"},
+    {"id":"REPLAY","activity":"ReplayPlan","stage":"REGRESSION","step":"replay-plan","proof_choice":"REGRESSION","indicator_class":"DRIVER","metric_path":"plan.digest","closed_reason":"PLAN_REPLAY_IDENTICAL","unknown_reason":"PLAN_REPLAY_UNKNOWN","refuted_reason":"PLAN_REPLAY_NONDETERMINISTIC","next_operation":"REPLAY_CAUSAL_PLAN"},
+    {"id":"UNKNOWN_FRONTIER","activity":"PreserveUnknownFrontier","stage":"REGRESSION","step":"preserve-unknown","proof_choice":"REGRESSION","indicator_class":"GUARDRAIL","metric_path":"unknowns","closed_reason":"UNKNOWN_FRONTIER_PRESERVED","unknown_reason":"UNKNOWN_FRONTIER_REQUIRED","refuted_reason":"UNKNOWN_FRONTIER_LAUNDERED","next_operation":"PRESERVE_UNKNOWN_CAUSAL_FRONTIER"},
+    {"id":"REFUTED_EXCLUSION","activity":"RefuteIncorrectExclusion","stage":"REGRESSION","step":"refute-exclusion","proof_choice":"REGRESSION","indicator_class":"GUARDRAIL","metric_path":"refutations","closed_reason":"INCORRECT_EXCLUSION_REFUTED","unknown_reason":"EXCLUSION_REFUTATION_UNKNOWN","refuted_reason":"EXCLUSION_REFUTATION_LAUNDERED","next_operation":"FAIL_CLOSED_ON_INCORRECT_EXCLUSION"},
+    {"id":"EXACT_PAIR","activity":"MeasureExactPair","stage":"PERFORMANCE","step":"measure-pair","proof_choice":"REGRESSION","indicator_class":"OUTCOME","metric_path":"performance.saved_test_wall_ms","closed_reason":"EXACT_PAIRED_RUN_MEASURED","unknown_reason":"EXACT_PAIRED_RUN_ABSENT","refuted_reason":"PERFORMANCE_CLAIM_UNSUPPORTED","next_operation":"REQUIRE_EXACT_PAIRED_RUN"}
+  ]
+}

@@ -1,0 +1,18 @@
+package causalci
+namespace causalci
+
+entity CausalInput id "gooo://causal-ci/entity/causal-input"
+entity CausalPlan id "gooo://causal-ci/entity/causal-plan"
+
+activity VerifySourceBinding(CausalInput) -> CausalPlan computes "causal-ci.verify-source-binding/v1"
+activity VerifySemanticGraph(CausalInput) -> CausalPlan computes "causal-ci.verify-semantic-graph/v1"
+activity BindClaimEvidence(CausalInput) -> CausalPlan computes "causal-ci.bind-claim-evidence/v1"
+activity ObserveChangedClaim(CausalInput) -> CausalPlan computes "causal-ci.observe-changed-claim/v1"
+activity TraceCausalClosure(CausalInput) -> CausalPlan computes "causal-ci.trace-causal-closure/v1"
+activity GenerateSelectedActivities(CausalInput) -> CausalPlan computes "causal-ci.generate-selected-activities/v1"
+activity PreserveExcludedEvidence(CausalInput) -> CausalPlan computes "causal-ci.preserve-excluded-evidence/v1"
+activity GenerateExecutionEnvelope(CausalInput) -> CausalPlan computes "causal-ci.generate-execution-envelope/v1"
+activity ReplayPlan(CausalInput) -> CausalPlan computes "causal-ci.replay-plan/v1"
+activity PreserveUnknownFrontier(CausalInput) -> CausalPlan computes "causal-ci.preserve-unknown-frontier/v1"
+activity RefuteIncorrectExclusion(CausalInput) -> CausalPlan computes "causal-ci.refute-incorrect-exclusion/v1"
+activity MeasureExactPair(CausalInput) -> CausalPlan computes "causal-ci.measure-exact-pair/v1"

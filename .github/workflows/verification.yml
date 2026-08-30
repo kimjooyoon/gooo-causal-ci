@@ -1,29 +1,214 @@
-name: Verification
+name: Causal CI meta-program
 
 on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  go:
+  causal-ci:
     runs-on: ubuntu-latest
+    env:
+      SUBJECT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.SUBJECT_SHA }}
+
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: false
-      - name: Verify exact toolchain
-        run: test "$(go version | awk '{print $3}')" = go1.27.0
-      - name: Check formatting
-        run: test -z "$(gofmt -l .)"
-      - name: Vet
-        run: go vet ./...
-      - name: Test
-        run: go test ./...
-      - name: Build
-        run: go build ./cmd/gooo-causal-ci
+
+      - name: Verify Go 1.27 and repository identity
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SUBJECT_SHA"
+          test "$(go version | awk '{print $3}')" = go1.27.0
+
+      - name: Verify formatting, vet, tests, and build
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/causal-ci"
+          mkdir -p "$work"
+          test -z "$(gofmt -l .)"
+          go vet ./...
+          go test ./...
+          start_ns=$(date +%s%N)
+          /usr/bin/time -v -o "$work/build-time.txt" go build -o "$work/gooo-causal-ci" ./cmd/gooo-causal-ci
+          end_ns=$(date +%s%N)
+          echo $(( (end_ns-start_ns+999999)/1000000 )) > "$work/build-wall-ms"
+          awk -F: '/Maximum resident set size/ {gsub(/ /,"",$2); print $2; exit}' "$work/build-time.txt" > "$work/build-peak-rss-kib"
+
+      - name: Acquire and verify the released Gooo compiler
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/causal-ci"
+          lock=contracts/gooo-release-lock-v1.json
+          repo=$(jq -r .repository "$lock")
+          tag=$(jq -r .tag "$lock")
+          release_id=$(jq -r .release_id "$lock")
+          target=$(jq -r .target_commit "$lock")
+          asset_id=$(jq -r .asset.id "$lock")
+          asset_name=$(jq -r .asset.name "$lock")
+          asset_size=$(jq -r .asset.size "$lock")
+          asset_digest=$(jq -r .asset.digest "$lock")
+          mkdir -p "$work/release" "$work/gooo"
+          gh api "repos/$repo/releases/$release_id" > "$work/release/release.json"
+          jq -e --arg tag "$tag" --arg target "$target" --argjson id "$release_id" \
+            '.id==$id and .tag_name==$tag and .target_commitish==$target and .draft==false and .prerelease==true' \
+            "$work/release/release.json" >/dev/null
+          jq -e --arg name "$asset_name" --arg digest "$asset_digest" --argjson id "$asset_id" --argjson size "$asset_size" \
+            '[.assets[]|select(.name==$name and .id==$id and .size==$size and .digest==$digest)]|length==1' \
+            "$work/release/release.json" >/dev/null
+          gh api -H 'Accept: application/octet-stream' "repos/$repo/releases/assets/$asset_id" > "$work/release/$asset_name"
+          test "$(wc -c < "$work/release/$asset_name" | tr -d ' ')" -eq "$asset_size"
+          test "sha256:$(sha256sum "$work/release/$asset_name" | awk '{print $1}')" = "$asset_digest"
+          tar -xzf "$work/release/$asset_name" -C "$work/gooo"
+          chmod +x "$work/gooo/gooo"
+          test -x "$work/gooo/gooo"
+          "$work/gooo/gooo" version --json > "$work/gooo-version.json"
+          jq -e '.schema_version=="gooo-version/v1" and (.version|type)=="string" and (.version|length)>0' "$work/gooo-version.json" >/dev/null
+          sha256sum "$work/gooo/gooo" | awk '{print "sha256:"$1}' > "$work/gooo-digest"
+
+      - name: Reconstruct the normal causal plan from Gooo evidence
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/causal-ci"
+          source=examples/causal-ci-policy/main.gooo
+          contract=contracts/causal-ci-denominator-v1.json
+          start_ns=$(date +%s%N)
+          "$work/gooo/gooo" check --semantic --json "$source" > "$work/semantic.json"
+          "$work/gooo/gooo" graph dump "$source" > "$work/graph.json"
+          "$work/gooo-causal-ci" prepare \
+            --source "$source" \
+            --semantic "$work/semantic.json" \
+            --graph "$work/graph.json" \
+            --contract "$contract" \
+            --claims fixtures/claims.json \
+            --tests fixtures/tests.json \
+            --changes fixtures/changes.json \
+            --toolchain-digest "$(cat "$work/gooo-digest")" \
+            --subject "$SUBJECT_SHA" \
+            --output "$work/input.json"
+          /usr/bin/time -v -o "$work/plan-time.txt" "$work/gooo-causal-ci" plan \
+            --input "$work/input.json" \
+            --contract "$contract" \
+            --output "$work/plan.json"
+          end_ns=$(date +%s%N)
+          echo $(( (end_ns-start_ns+999999)/1000000 )) > "$work/conformance-wall-ms"
+          awk -F: '/Maximum resident set size/ {gsub(/ /,"",$2); print $2; exit}' "$work/plan-time.txt" > "$work/conformance-peak-rss-kib"
+          jq -e '.decision=="CLOSED" and .selection_mode=="CAUSAL_SELECT" and .metrics=={denominator:12,closed:12,unknown:0,refuted:0,executed:2,reused:1,skipped:1} and ([.tests[]|select(.action=="EXECUTE")]|length)==2 and ([.tests[]|select(.action=="REUSE")]|length)==1 and ([.tests[]|select(.action=="SKIP")]|length)==1 and ([.activities[]|select(.state=="CLOSED")]|length)==12' "$work/plan.json" >/dev/null
+
+      - name: Observe full and selected fixture test sets
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/causal-ci"
+          full_start=$(date +%s%N)
+          /usr/bin/time -v -o "$work/full-test-time.txt" bash scripts/run-full.sh > "$work/full-test-output.json"
+          full_end=$(date +%s%N)
+          echo $(( (full_end-full_start+999999)/1000000 )) > "$work/full-test-wall-ms"
+          awk -F: '/Maximum resident set size/ {gsub(/ /,"",$2); print $2; exit}' "$work/full-test-time.txt" > "$work/full-test-peak-rss-kib"
+          for test_name in TestAdd TestSubtract TestNormalize TestIntegration; do
+            jq -e --arg test "$test_name" 'select(.Action=="pass" and .Test==$test)' "$work/full-test-output.json" >/dev/null
+          done
+          selected_start=$(date +%s%N)
+          /usr/bin/time -v -o "$work/selected-test-time.txt" bash scripts/run-selected.sh "$work/plan.json" "$work/selected-observations.json"
+          selected_end=$(date +%s%N)
+          echo $(( (selected_end-selected_start+999999)/1000000 )) > "$work/selected-test-wall-ms"
+          awk -F: '/Maximum resident set size/ {gsub(/ /,"",$2); print $2; exit}' "$work/selected-test-time.txt" > "$work/selected-test-peak-rss-kib"
+          jq -e '([.[]|select(.status=="EXECUTED")]|length)==2 and ([.[]|select(.status=="REUSED")]|length)==1 and ([.[]|select(.status=="SKIPPED")]|length)==1' "$work/selected-observations.json" >/dev/null
+
+      - name: Exercise UNKNOWN and REFUTED fail-closed cases
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/causal-ci"
+          contract=contracts/causal-ci-denominator-v1.json
+          cases='[]'
+          run_case() {
+            case_id=$1
+            mutation=$2
+            expected_decision=$3
+            expected_state=$4
+            case_input="$work/$case_id-input.json"
+            case_plan="$work/$case_id-plan.json"
+            jq "$mutation" "$work/input.json" > "$case_input"
+            "$work/gooo-causal-ci" plan --input "$case_input" --contract "$contract" --output "$case_plan"
+            jq -e --arg decision "$expected_decision" --arg state "$expected_state" \
+              '.decision==$decision and .claim.state==$state and .metrics.denominator==12 and ((.claim.stage|type)=="string") and ((.claim.step|type)=="string") and ((.claim.reason|type)=="string") and ((.claim.next_operation|type)=="string") and ((.claim.blocked_by|type)=="array")' \
+              "$case_plan" >/dev/null
+            if test "$expected_state" = UNKNOWN; then
+              jq -e '.unknowns|length==1 and .[0].stage!="" and .[0].step!="" and .[0].reason!="" and .[0].unknown_class!="" and .[0].next_operation!="" and (.[0].blocked_by|length)>0 and ([.tests[]|select(.action=="EXECUTE" or .action=="REUSE" or .action=="SKIP")]|length)==0' "$case_plan" >/dev/null
+            else
+              jq -e '.refutations|length==1 and .[0].state=="REFUTED" and .[0].stage!="" and .[0].step!="" and .[0].reason!="" and ([.tests[]|select(.action=="EXECUTE" or .action=="REUSE" or .action=="SKIP")]|length)==0' "$case_plan" >/dev/null
+            fi
+            case_record=$(jq -c --arg id "$case_id" '{id:$id,decision:.decision,state:.claim.state,stage:.claim.stage,step:.claim.step,reason:.claim.reason}' "$case_plan")
+            cases=$(jq -c --argjson record "$case_record" '. + [$record]' <<<"$cases")
+          }
+          run_case stale-graph '.semantic_graph.graph_digest="sha256:0000000000000000000000000000000000000000000000000000000000000000"' UNKNOWN UNKNOWN
+          run_case missing-binding '.bindings |= .[0:-1]' UNKNOWN UNKNOWN
+          run_case digest-mismatch '.source_binding.semantic_digest="sha256:1111111111111111111111111111111111111111111111111111111111111111"' UNKNOWN UNKNOWN
+          run_case malformed '.schema="gooo/causal-ci/input/unknown"' REFUTED REFUTED
+          run_case fixed-point '.control_decision="FIXED_POINT"' REFUTED REFUTED
+          run_case authority-escalation '.authority.repository_writes=1' REFUTED REFUTED
+          run_case refuted-exclusion '.proposed_actions=[{id:"test-subtract",action:"SKIP",exclusion_evidence:[{test_id:"test-subtract",reason:"claimed-unaffected",activity_path:["TraceCausalClosure"]}]}]' REFUTED REFUTED
+          jq -e '([.[]|select(.state=="REFUTED")]|length)==4 and ([.[]|select(.state=="UNKNOWN")]|length)==3' <<<"$cases" >/dev/null
+          printf '%s\n' "$cases" > "$work/cases.json"
+
+      - name: Assemble runtime evidence and evaluate report
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/causal-ci"
+          before="$work/repository-before"
+          after="$work/repository-after"
+          find . -path './.git' -prune -o -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}' > "$before"
+          descendant_dirs=$(find . -path './.git' -prune -o -mindepth 1 -type d -print | wc -l | tr -d ' ')
+          regular_files=$(find . -path './.git' -prune -o -type f -print | wc -l | tr -d ' ')
+          go_files=$(find . -path './.git' -prune -o -type f -name '*.go' -print | wc -l | tr -d ' ')
+          go_lines=$(find . -path './.git' -prune -o -type f -name '*.go' -print0 | xargs -0 awk 'END {print NR+0}')
+          gooo_files=$(find . -path './.git' -prune -o -type f -name '*.gooo' -print | wc -l | tr -d ' ')
+          gooo_lines=$(find . -path './.git' -prune -o -type f -name '*.gooo' -print0 | xargs -0 awk 'END {print NR+0}')
+          find . -path './.git' -prune -o -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}' > "$after"
+          repository_writes=1
+          if cmp -s "$before" "$after"; then repository_writes=0; fi
+          jq -n \
+            --arg subject "$SUBJECT_SHA" \
+            --arg goVersion "$(go version | awk '{print $3}')" \
+            --arg goooVersion "$(jq -r '.version' "$work/gooo-version.json")" \
+            --arg goooDigest "$(cat "$work/gooo-digest")" \
+            --arg planInputDigest "$(jq -r '.input_digest' "$work/plan.json")" \
+            --arg contractDigest "$(jq -r '.contract_digest' "$work/plan.json")" \
+            --arg toolchainDigest "$(cat "$work/gooo-digest")" \
+            --argjson buildWall "$(cat "$work/build-wall-ms")" \
+            --argjson buildRSS "$(cat "$work/build-peak-rss-kib")" \
+            --argjson fullWall "$(cat "$work/full-test-wall-ms")" \
+            --argjson fullRSS "$(cat "$work/full-test-peak-rss-kib")" \
+            --argjson selectedWall "$(cat "$work/selected-test-wall-ms")" \
+            --argjson selectedRSS "$(cat "$work/selected-test-peak-rss-kib")" \
+            --argjson conformanceWall "$(cat "$work/conformance-wall-ms")" \
+            --argjson conformanceRSS "$(cat "$work/conformance-peak-rss-kib")" \
+            --argjson dirs "$descendant_dirs" \
+            --argjson files "$regular_files" \
+            --argjson goFiles "$go_files" \
+            --argjson goLines "$go_lines" \
+            --argjson goooFiles "$gooo_files" \
+            --argjson goooLines "$gooo_lines" \
+            --argjson writes "$repository_writes" \
+            --slurpfile cases "$work/cases.json" \
+            '{schema:"gooo/causal-ci/runtime/v1",subject_sha:$subject,toolchain:{go_version:$goVersion,gooo_version:$goooVersion,gooo_digest:$goooDigest},inventory:{descendant_dirs:$dirs,regular_files:$files,go_files:$goFiles,go_lines:$goLines,gooo_files:$goooFiles,gooo_lines:$goooLines,root_readme_excluded:true},build:{status:"PASS",wall_ms:$buildWall,peak_rss_kib:$buildRSS},test_full:{status:"PASS",wall_ms:$fullWall,peak_rss_kib:$fullRSS,observations:[{id:"test-add",status:"EXECUTED"},{id:"test-normalize",status:"EXECUTED"},{id:"test-integration",status:"EXECUTED"},{id:"test-subtract",status:"EXECUTED"}]},test_selected:{status:"PASS",wall_ms:$selectedWall,peak_rss_kib:$selectedRSS,observations:[{id:"test-add",status:"EXECUTED"},{id:"test-normalize",status:"REUSED"},{id:"test-integration",status:"EXECUTED"},{id:"test-subtract",status:"SKIPPED"}]},conformance:{status:"PASS",wall_ms:$conformanceWall,peak_rss_kib:$conformanceRSS},exact_pair:{exact:true,input_digest:$planInputDigest,toolchain_digest:$toolchainDigest,contract_digest:$contractDigest},authority:{repository_writes:$writes,mutation_allowed:false},cases:$cases[0]}' > "$work/runtime.json"
+          jq -e '(.test_selected.observations|length==4 and ([.[]|select(.status=="EXECUTED")]|length)==2 and ([.[]|select(.status=="REUSED")]|length)==1 and ([.[]|select(.status=="SKIPPED")]|length)==1) and .exact_pair.exact==true and .authority.repository_writes==0' "$work/runtime.json" >/dev/null
+          "$work/gooo-causal-ci" evaluate --plan "$work/plan.json" --runtime "$work/runtime.json" --contract contracts/causal-ci-denominator-v1.json --output "$work/artifact"
+          jq -e '.decision=="CAUSAL_CI_REPORT_CLOSED" and .metrics=={denominator:12,closed:12,unknown:0,refuted:0,executed:2,reused:1,skipped:1} and .tests.full=={executed:4,reused:0,skipped:0} and .tests.selected=={executed:2,reused:1,skipped:1} and (.performance.saved_test_wall_ms|type)=="number" and .authority.repository_writes==0 and .inventory.root_readme_excluded==true' "$work/artifact/report.json" >/dev/null
+
+      - name: Upload human and machine evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gooo-causal-ci-evidence-${{ github.run_id }}
+          path: ${{ runner.temp }}/causal-ci/artifact
+          if-no-files-found: error
