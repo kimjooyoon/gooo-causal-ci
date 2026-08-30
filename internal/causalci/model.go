@@ -155,31 +155,31 @@ type WorkspaceInventory struct {
 }
 
 type Plan struct {
-	Schema          string            `json:"schema"`
-	Decision        string            `json:"decision"`
-	SelectionMode   string            `json:"selection_mode"`
-	ContractDigest  string            `json:"contract_digest"`
-	InputDigest     string            `json:"input_digest"`
-	SourceBinding   SourceBinding     `json:"source_binding"`
-	Activities      []ActivityReceipt `json:"activities"`
-	Tests           []TestAction      `json:"tests"`
-	Unknowns        []CausalState     `json:"unknowns"`
-	Refutations     []CausalState     `json:"refutations"`
-	Claim           CausalState       `json:"claim"`
-	Metrics         PlanMetrics       `json:"metrics"`
+	Schema         string            `json:"schema"`
+	Decision       string            `json:"decision"`
+	SelectionMode  string            `json:"selection_mode"`
+	ContractDigest string            `json:"contract_digest"`
+	InputDigest    string            `json:"input_digest"`
+	SourceBinding  SourceBinding     `json:"source_binding"`
+	Activities     []ActivityReceipt `json:"activities"`
+	Tests          []TestAction      `json:"tests"`
+	Unknowns       []CausalState     `json:"unknowns"`
+	Refutations    []CausalState     `json:"refutations"`
+	Claim          CausalState       `json:"claim"`
+	Metrics        PlanMetrics       `json:"metrics"`
 }
 
 type ActivityReceipt struct {
-	CellID         string   `json:"cell_id"`
-	Activity       string   `json:"activity"`
-	State          string   `json:"state"`
-	ProofChoice    string   `json:"proof_choice"`
-	IndicatorClass string   `json:"indicator_class"`
-	SourcePath     string   `json:"source_path"`
-	GraphNodeID    string   `json:"graph_node_id"`
-	BindingDigest  string   `json:"binding_digest"`
-	ArtifactPath   string   `json:"artifact_path"`
-	Evaluator      string   `json:"evaluator"`
+	CellID         string `json:"cell_id"`
+	Activity       string `json:"activity"`
+	State          string `json:"state"`
+	ProofChoice    string `json:"proof_choice"`
+	IndicatorClass string `json:"indicator_class"`
+	SourcePath     string `json:"source_path"`
+	GraphNodeID    string `json:"graph_node_id"`
+	BindingDigest  string `json:"binding_digest"`
+	ArtifactPath   string `json:"artifact_path"`
+	Evaluator      string `json:"evaluator"`
 }
 
 type TestAction struct {
@@ -219,7 +219,7 @@ type Runtime struct {
 	Build        Measurement        `json:"build"`
 	TestFull     TestRun            `json:"test_full"`
 	TestSelected TestRun            `json:"test_selected"`
-	Conformance  Measurement       `json:"conformance"`
+	Conformance  Measurement        `json:"conformance"`
 	Pair         ExactPair          `json:"exact_pair"`
 	Authority    Authority          `json:"authority"`
 	Cases        []CaseResult       `json:"cases"`
@@ -238,9 +238,9 @@ type Measurement struct {
 }
 
 type TestRun struct {
-	Status      string            `json:"status"`
-	WallMS      int               `json:"wall_ms"`
-	PeakRSSKib  int               `json:"peak_rss_kib"`
+	Status       string            `json:"status"`
+	WallMS       int               `json:"wall_ms"`
+	PeakRSSKib   int               `json:"peak_rss_kib"`
 	Observations []TestObservation `json:"observations"`
 }
 
@@ -250,10 +250,10 @@ type TestObservation struct {
 }
 
 type ExactPair struct {
-	Exact          bool   `json:"exact"`
-	InputDigest    string `json:"input_digest"`
+	Exact           bool   `json:"exact"`
+	InputDigest     string `json:"input_digest"`
 	ToolchainDigest string `json:"toolchain_digest"`
-	ContractDigest string `json:"contract_digest"`
+	ContractDigest  string `json:"contract_digest"`
 }
 
 type CaseResult struct {
@@ -304,16 +304,16 @@ type TestCounts struct {
 }
 
 type ReportPerformance struct {
-	BuildWallMS          int    `json:"build_wall_ms"`
-	BuildPeakRSSKib      int    `json:"build_peak_rss_kib"`
-	TestFullWallMS       int    `json:"test_full_wall_ms"`
-	TestFullPeakRSSKib   int    `json:"test_full_peak_rss_kib"`
-	TestSelectedWallMS   int    `json:"test_selected_wall_ms"`
+	BuildWallMS            int  `json:"build_wall_ms"`
+	BuildPeakRSSKib        int  `json:"build_peak_rss_kib"`
+	TestFullWallMS         int  `json:"test_full_wall_ms"`
+	TestFullPeakRSSKib     int  `json:"test_full_peak_rss_kib"`
+	TestSelectedWallMS     int  `json:"test_selected_wall_ms"`
 	TestSelectedPeakRSSKib int  `json:"test_selected_peak_rss_kib"`
-	ConformanceWallMS    int    `json:"conformance_wall_ms"`
-	ConformancePeakRSSKib int   `json:"conformance_peak_rss_kib"`
-	SavedTestWallMS      any    `json:"saved_test_wall_ms"`
-	ExactPair            bool   `json:"exact_pair"`
+	ConformanceWallMS      int  `json:"conformance_wall_ms"`
+	ConformancePeakRSSKib  int  `json:"conformance_peak_rss_kib"`
+	SavedTestWallMS        any  `json:"saved_test_wall_ms"`
+	ExactPair              bool `json:"exact_pair"`
 }
 
 type ReportAuthority struct {
@@ -328,14 +328,14 @@ type ArtifactInventory struct {
 }
 
 type ActivityEvidence struct {
-	CellID          string   `json:"cell_id"`
-	Activity        string   `json:"activity"`
-	GoooSource      string   `json:"gooo_source"`
-	SemanticGraph   string   `json:"semantic_graph"`
-	BindingDigest   string   `json:"binding_digest"`
-	ClaimEvidence   []string `json:"claim_evidence"`
-	GeneratedArtifact string  `json:"generated_artifact"`
-	Evaluator       string   `json:"evaluator"`
+	CellID            string   `json:"cell_id"`
+	Activity          string   `json:"activity"`
+	GoooSource        string   `json:"gooo_source"`
+	SemanticGraph     string   `json:"semantic_graph"`
+	BindingDigest     string   `json:"binding_digest"`
+	ClaimEvidence     []string `json:"claim_evidence"`
+	GeneratedArtifact string   `json:"generated_artifact"`
+	Evaluator         string   `json:"evaluator"`
 }
 
 func (i Input) MarshalJSON() ([]byte, error) {
