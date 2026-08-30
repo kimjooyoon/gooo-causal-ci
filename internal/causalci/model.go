@@ -292,9 +292,9 @@ type ReportMetrics struct {
 }
 
 type ReportTests struct {
-	Total      int `json:"total"`
-	Full       TestCounts `json:"full"`
-	Selected   TestCounts `json:"selected"`
+	Total    int        `json:"total"`
+	Full     TestCounts `json:"full"`
+	Selected TestCounts `json:"selected"`
 }
 
 type TestCounts struct {
