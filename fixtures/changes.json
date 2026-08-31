@@ -1,0 +1,4 @@
+{
+  "schema": "gooo/causal-ci/change-observation/v1",
+  "claim_ids": ["claim-shared-normalization-changed"]
+}
