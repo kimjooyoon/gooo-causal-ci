@@ -123,12 +123,12 @@ func validateRuntime(plan Plan, runtime Runtime) error {
 	if runtime.TestFull.Status != "PASS" || runtime.TestSelected.Status != "PASS" || runtime.TestFull.WallMS < 0 || runtime.TestSelected.WallMS < 0 || runtime.TestFull.PeakRSSKib < 0 || runtime.TestSelected.PeakRSSKib < 0 {
 		return fmt.Errorf("test runtime evidence is invalid")
 	}
-	allIDs := map[string]bool{}
+	allIDs := map[string]string{}
 	for _, test := range plan.Tests {
-		if test.ID == "" || allIDs[test.ID] {
+		if test.ID == "" || allIDs[test.ID] != "" {
 			return fmt.Errorf("plan test inventory is malformed")
 		}
-		allIDs[test.ID] = true
+		allIDs[test.ID] = "EXECUTED"
 	}
 	if err := validateObservations(runtime.TestFull.Observations, allIDs, "EXECUTED"); err != nil {
 		return fmt.Errorf("full test observation: %w", err)

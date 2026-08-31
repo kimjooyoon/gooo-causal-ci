@@ -409,13 +409,13 @@ func activeClaims(input Input) ([]ClaimEvidence, map[string]bool, error) {
 
 func validateInput(input Input, denominator Denominator) (CausalState, bool) {
 	if input.Schema != InputSchema || input.Subject.Repository == "" || input.Subject.Commit == "" || input.SourceBinding.Path == "" {
-		return stateRefuted("CONFORMANCE", "validate-input", "MALFORMED_INPUT", "", "REJECT_MALFORMED_INPUT", []string{"input"}), false
+		return stateRefuted("CONFORMANCE", "validate-input", "MALFORMED_INPUT", "REJECT_MALFORMED_INPUT", []string{"input"}), false
 	}
 	if input.ControlDecision != "PLAN" {
-		return stateRefuted("CONFORMANCE", "validate-control-decision", "UNRECOGNIZED_DECISION_"+input.ControlDecision, "", "REJECT_UNRECOGNIZED_DECISION", []string{"control-decision"}), false
+		return stateRefuted("CONFORMANCE", "validate-control-decision", "UNRECOGNIZED_DECISION_"+input.ControlDecision, "REJECT_UNRECOGNIZED_DECISION", []string{"control-decision"}), false
 	}
 	if input.Authority.RepositoryWrites != 0 || input.Authority.MutationAllowed {
-		return stateRefuted("AUTHORITY", "validate-mutation-authority", "REPOSITORY_WRITE_AUTHORITY_ESCALATED", "", "FAIL_CLOSED_ON_AUTHORITY_ESCALATION", []string{"authority"}), false
+		return stateRefuted("AUTHORITY", "validate-mutation-authority", "REPOSITORY_WRITE_AUTHORITY_ESCALATED", "FAIL_CLOSED_ON_AUTHORITY_ESCALATION", []string{"authority"}), false
 	}
 	if !validDigest(input.ContractDigest) || !validDigest(input.SourceBinding.SourceDigest) || !validDigest(input.SourceBinding.SemanticDigest) || !validDigest(input.SourceBinding.GraphDigest) {
 		return stateUnknown("CONFORMANCE", "validate-digest-shapes", "REQUIRED_DIGEST_NOT_OBSERVED", "LOWER_RESOLUTION", "PROVIDE_SOURCE_GRAPH_DIGESTS", []string{"source-binding", "semantic-graph"}), false
