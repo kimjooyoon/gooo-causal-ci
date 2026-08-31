@@ -82,7 +82,7 @@ func Prepare(sourcePath, semanticPath, graphPath, contractPath, claimsPath, test
 		return Input{}, fmt.Errorf("read semantic receipt: %w", err)
 	}
 	var semantic semanticObservation
-	if err := decodeJSON(semanticRaw, &semantic); err != nil {
+	if err := decodeLooseJSON(semanticRaw, &semantic); err != nil {
 		return Input{}, fmt.Errorf("decode semantic receipt: %w", err)
 	}
 	graphRaw, err := os.ReadFile(graphPath)
@@ -90,7 +90,7 @@ func Prepare(sourcePath, semanticPath, graphPath, contractPath, claimsPath, test
 		return Input{}, fmt.Errorf("read semantic graph: %w", err)
 	}
 	var graph graphObservation
-	if err := decodeJSON(graphRaw, &graph); err != nil {
+	if err := decodeLooseJSON(graphRaw, &graph); err != nil {
 		return Input{}, fmt.Errorf("decode semantic graph: %w", err)
 	}
 
@@ -671,4 +671,8 @@ func decodeJSON(raw []byte, target any) error {
 		return err
 	}
 	return nil
+}
+
+func decodeLooseJSON(raw []byte, target any) error {
+	return json.Unmarshal(raw, target)
 }
