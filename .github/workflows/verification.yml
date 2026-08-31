@@ -157,7 +157,7 @@ jobs:
           run_case malformed '.schema="gooo/causal-ci/input/unknown"' REFUTED REFUTED
           run_case fixed-point '.control_decision="FIXED_POINT"' REFUTED REFUTED
           run_case authority-escalation '.authority.repository_writes=1' REFUTED REFUTED
-          run_case refuted-exclusion '.proposed_actions=[{id:"test-subtract",action:"SKIP",exclusion_evidence:[{test_id:"test-subtract",reason:"claimed-unaffected",activity_path:["TraceCausalClosure"]}]}]' REFUTED REFUTED
+          run_case refuted-exclusion '.proposed_actions=[{id:"test-add",action:"SKIP",exclusion_evidence:[{test_id:"test-add",reason:"claimed-unaffected",activity_path:["VerifySourceBinding"]}]}]' REFUTED REFUTED
           jq -e '([.[]|select(.state=="REFUTED")]|length)==4 and ([.[]|select(.state=="UNKNOWN")]|length)==3' <<<"$cases" >/dev/null
           printf '%s\n' "$cases" > "$work/cases.json"
 
