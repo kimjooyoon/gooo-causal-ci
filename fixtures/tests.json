@@ -1,0 +1,10 @@
+{
+  "schema": "gooo/causal-ci/test-registry/v1",
+  "full_command": ["go", "-C", "fixtures/subject", "test", "-count=1", "-json", "."],
+  "tests": [
+    {"id":"test-add","command":["go","-C","fixtures/subject","test","-run","^TestAdd$","-count=1","-json","."],"activities":["TraceCausalClosure"],"reuse_candidate":false},
+    {"id":"test-normalize","command":["go","-C","fixtures/subject","test","-run","^TestNormalize$","-count=1","-json","."],"activities":["GenerateSelectedActivities"],"reuse_candidate":true},
+    {"id":"test-integration","command":["go","-C","fixtures/subject","test","-run","^TestIntegration$","-count=1","-json","."],"activities":["GenerateExecutionEnvelope"],"reuse_candidate":false},
+    {"id":"test-subtract","command":["go","-C","fixtures/subject","test","-run","^TestSubtract$","-count=1","-json","."],"activities":["ReplayPlan"],"reuse_candidate":false}
+  ]
+}

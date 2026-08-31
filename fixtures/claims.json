@@ -1,0 +1,17 @@
+{
+  "schema": "gooo/causal-ci/claim-evidence/v1",
+  "claims": [
+    {
+      "id": "claim-shared-normalization-changed",
+      "subject": "semantic://fixture/shared-normalization",
+      "activity_path": ["ObserveChangedClaim", "TraceCausalClosure", "GenerateSelectedActivities", "GenerateExecutionEnvelope"],
+      "exclusions": [
+        {
+          "test_id": "test-subtract",
+          "reason": "NO_CAUSAL_ACTIVITY_PATH_TO_SUBTRACT",
+          "activity_path": ["VerifySourceBinding"]
+        }
+      ]
+    }
+  ]
+}
